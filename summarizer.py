@@ -6,7 +6,7 @@ import re
 # Import the Chatbot class from the ChatGPT module
 from revChatGPT.ChatGPT import Chatbot
 which_model = "chatgpt"
-which_model = "gpt3.5"
+#which_model = "gpt3.5"
 # Initialize a Chatbot instance with a session token
 try:
     session_token = "{YOUR_CHATGPT_SESSION_KEY}"
