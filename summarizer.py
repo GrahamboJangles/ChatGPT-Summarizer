@@ -5,16 +5,33 @@ import re
 # openai.api_key = "YOUR_API_KEY"
 # Import the Chatbot class from the ChatGPT module
 from revChatGPT.ChatGPT import Chatbot
-
+which_model = "chatgpt"
+which_model = "gpt3.5"
 # Initialize a Chatbot instance with a session token
 try:
-    session_token = ""
+    session_token = "{YOUR_CHATGPT_SESSION_KEY}"
     global chatbot
     chatbot = Chatbot({"session_token": session_token})
 except Exception as e:
     print(e)
     exit()
 # chatbot = Chatbot({"session_token": session_token})
+
+def chatgptapi(prompt):
+    print(f"Beginning of prompt: ============================================================\n{prompt}")
+    import openai
+    import os
+    import sys
+
+    openai.api_key = "{YOUR_OPENAI_KEY}"
+    response = openai.ChatCompletion.create(
+    model="gpt-3.5-turbo",
+    messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    # print(response)
+    return response['choices'][0]['message']['content']
 
 # Define a function to split text into 3000-word chunks, stopping at the end of the last sentence
 def chunk_text(text, MAX_CHUNK_LENGTH):
@@ -75,8 +92,12 @@ def summarize_chunk(chunk, prompt_text):
     print("chunk: ", prompt_text)
     print("len(chunk): ", len(prompt_text))
 
-    response = chatbot.ask(prompt_text)
-    response = response["message"]
+    if which_model == "chatgpt":
+        response = chatbot.ask(prompt_text)
+        response = response["message"]
+
+    if which_model == "gpt3.5":
+        response = chatgptapi(prompt_text)
     
     return response
 
@@ -114,3 +135,12 @@ final_max_tokens = 50
 final_summary = summarize_long_text(file_contents, max_chunk_length, final_max_tokens)
 
 print(f"\nFinal summary: {final_summary}")
+
+# Ask for any follow up questions
+user_input = input("\nAsk a follow up question about the text or press enter to exit: ")
+while user_input != "":
+    response = chatbot.ask(user_input)
+    response = response["message"]
+    print(f"\n{response}")
+
+    user_input = input("\nAsk a follow up question about the text or press enter to exit: ")
