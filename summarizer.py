@@ -4,26 +4,31 @@ import re
 # Set up OpenAI API credentials
 # openai.api_key = "YOUR_API_KEY"
 # Import the Chatbot class from the ChatGPT module
-from revChatGPT.ChatGPT import Chatbot
+
+# from revChatGPT.V3 import Chatbot
+# from revChatGPT.V1 import AsyncChatbot
 which_model = "chatgpt"
-#which_model = "gpt3.5"
-# Initialize a Chatbot instance with a session token
-try:
-    session_token = "{YOUR_CHATGPT_SESSION_KEY}"
-    global chatbot
-    chatbot = Chatbot({"session_token": session_token})
-except Exception as e:
-    print(e)
-    exit()
-# chatbot = Chatbot({"session_token": session_token})
+which_model = "gpt3.5"
+
+if which_model == "chatgpt":
+    # Initialize a Chatbot instance with a session token
+    try:
+        session_token = "YOUR_SESSION_TOKEN_FOR_CHATGPT"
+        global chatbot
+        chatbot = AsyncChatbot({"session_token": session_token})
+    except Exception as e:
+        print(e)
+        exit()
+    # chatbot = AsyncChatbot({"session_token": session_token})
 
 def chatgptapi(prompt):
     print(f"Beginning of prompt: ============================================================\n{prompt}")
     import openai
     import os
     import sys
+    openai.api_base = 'https://api.hypere.app' # really important
 
-    openai.api_key = "{YOUR_OPENAI_KEY}"
+    openai.api_key = "free"
     response = openai.ChatCompletion.create(
     model="gpt-3.5-turbo",
     messages=[
@@ -94,7 +99,7 @@ def summarize_chunk(chunk, prompt_text):
 
     if which_model == "chatgpt":
         response = chatbot.ask(prompt_text)
-        response = response["message"]
+        response = response
 
     if which_model == "gpt3.5":
         response = chatgptapi(prompt_text)
@@ -108,7 +113,7 @@ def summarize_long_text(long_text, max_chunk_length, final_max_tokens):
     
     user_input = input("\nAsk a question about the text or press enter to summarize the text: ")
     if user_input == "":
-        prompt_text = "Summarize this text:\n\n"
+        prompt_text = "Summarize this text using bullet points:\n\n"
     else:
         prompt_text = f"{user_input}\n\n"
 
@@ -129,8 +134,12 @@ with open('text to summarize.txt', 'r', encoding="cp1252", errors="replace") as 
     # Read the entire file as a string
     file_contents = file.read()
 
-max_chunk_length = 1500
-final_max_tokens = 50
+if which_model == "chatgpt":
+    max_chunk_length = 1500
+    final_max_tokens = 50
+if which_model == "gpt3.5":
+    max_chunk_length = 1800
+    final_max_tokens = 100
 
 final_summary = summarize_long_text(file_contents, max_chunk_length, final_max_tokens)
 
@@ -139,8 +148,14 @@ print(f"\nFinal summary: {final_summary}")
 # Ask for any follow up questions
 user_input = input("\nAsk a follow up question about the text or press enter to exit: ")
 while user_input != "":
-    response = chatbot.ask(user_input)
-    response = response["message"]
+    if which_model == "chatgpt":
+        response = chatbot.ask(user_input)
+        response = response
+    if which_model == "gpt3.5":
+        response = chatgptapi(user_input)
     print(f"\n{response}")
 
     user_input = input("\nAsk a follow up question about the text or press enter to exit: ")
+
+# Close the file
+# file.close()
