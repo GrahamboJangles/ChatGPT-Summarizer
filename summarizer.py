@@ -1,19 +1,13 @@
 import openai
 import re
 
-# Set up OpenAI API credentials
-# openai.api_key = "YOUR_API_KEY"
-# Import the Chatbot class from the ChatGPT module
-
-# from revChatGPT.V3 import Chatbot
-# from revChatGPT.V1 import AsyncChatbot
 which_model = "chatgpt"
 which_model = "gpt3.5"
 
 if which_model == "chatgpt":
     # Initialize a Chatbot instance with a session token
     try:
-        session_token = "YOUR_SESSION_TOKEN_FOR_CHATGPT"
+        session_token = "{ENTER_YOUR_CHATGPT_SESSION_TOKEN_HERE}"
         global chatbot
         chatbot = AsyncChatbot({"session_token": session_token})
     except Exception as e:
@@ -22,21 +16,19 @@ if which_model == "chatgpt":
     # chatbot = AsyncChatbot({"session_token": session_token})
 
 def chatgptapi(prompt):
-    print(f"Beginning of prompt: ============================================================\n{prompt}")
     import openai
-    import os
-    import sys
-    openai.api_base = 'https://api.hypere.app' # really important
 
-    openai.api_key = "free"
+    openai.api_key = ""
+    openai.api_base = "https://free.churchless.tech/v1"
+
+    import os
+
     response = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo",
-    messages=[
-            {"role": "user", "content": prompt}
-        ]
-    )
-    # print(response)
-    return response['choices'][0]['message']['content']
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}]
+        )
+
+    return response.choices[0].message.content
 
 # Define a function to split text into 3000-word chunks, stopping at the end of the last sentence
 def chunk_text(text, MAX_CHUNK_LENGTH):
@@ -71,27 +63,7 @@ def chunk_text(text, MAX_CHUNK_LENGTH):
 
 
 # Define a function to summarize a chunk of text using the OpenAI API
-def summarize_chunk(chunk, prompt_text):
-    # # Set up the OpenAI API parameters
-    # model_engine = "text-davinci-002"
-    # prompt = f"Please summarize the following text:\n{chunk}\n\nSummary:"
-    # temperature = 0.5
-    # max_tokens = 100
-    
-    # # Generate the summary using the OpenAI API
-    # response = openai.Completion.create(
-    #     engine=model_engine,
-    #     prompt=prompt,
-    #     temperature=temperature,
-    #     max_tokens=max_tokens,
-    #     n=1,
-    #     stop=None,
-    #     timeout=30,
-    # )
-    
-    # # Extract the summary from the OpenAI API response
-    # summary = response.choices[0].text.strip()
-    
+def summarize_chunk(chunk, prompt_text):  
     # return summary
     prompt_text = prompt_text + chunk
     print("chunk: ", prompt_text)
@@ -134,6 +106,37 @@ with open('text to summarize.txt', 'r', encoding="cp1252", errors="replace") as 
     # Read the entire file as a string
     file_contents = file.read()
 
+from youtube_transcript_api import YouTubeTranscriptApi
+import re
+
+def get_transcript(video_url):
+    # Fetch transcript from API
+    video_id = video_url.split("watch?v=")[1]
+    transcript = YouTubeTranscriptApi.get_transcript(video_id)
+    return transcript
+
+def is_youtube_link(link: str) -> bool:
+    # Works for any youtube link
+    pattern = r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/(watch\?v=)?[a-zA-Z0-9_-]{11}$'
+    # Returns True if the link is a valid youtube link
+    return bool(re.match(pattern, link))
+
+def get_video_transcript(video_url):
+    if is_youtube_link(video_url):
+        transcript = get_transcript(video_url)
+        text_transcript = ''
+
+        # Convert transcript with timestamp to transcript with text only
+        for d in transcript:
+            if isinstance(d, dict):
+                text_transcript += d['text'] + ' '
+
+    return text_transcript
+
+# Check if the file_contents is a youtube link and nothing else
+if is_youtube_link(file_contents):
+    file_contents = get_video_transcript(file_contents)
+
 if which_model == "chatgpt":
     max_chunk_length = 1500
     final_max_tokens = 50
@@ -156,6 +159,3 @@ while user_input != "":
     print(f"\n{response}")
 
     user_input = input("\nAsk a follow up question about the text or press enter to exit: ")
-
-# Close the file
-# file.close()
